@@ -1,6 +1,7 @@
 import { AppDataSource } from "../data-source";
 import { User } from "../entities/user.entities";
-import { IUserReq, IUserRes } from "../interfaces/users.interfaces";
+import { IUserReq } from "../interfaces/users.interfaces";
+import bcrypt from "bcrypt";
 
 const editUserService = async ({
   id,
@@ -8,7 +9,7 @@ const editUserService = async ({
   email,
   password,
   age,
-}: IUserReq) => {
+}: IUserReq): Promise<Object> => {
   const userRepository = AppDataSource.getRepository(User);
 
   const user = await userRepository
@@ -17,16 +18,15 @@ const editUserService = async ({
     .set({
       name: name,
       email: email,
-      password: password,
+      password: await bcrypt.hash(password, 10),
       age: age,
       updated_at: new Date(),
     })
-    .where(`id = :id`, { id: id})
-    .returning('*')
+    .where(`id = :id`, { id: id })
+    .returning("*")
     .execute();
 
-    return { message: "User updated",
-  user: user.raw[0] };
+  return { message: "User updated", user: user.raw[0] };
 };
 
 export default editUserService;
